@@ -11,17 +11,8 @@ MSBuild Binlog Viewer for Rider opens `msbuild.binlog` files in a dedicated view
 - Open `.binlog` files in a dedicated editor
 - Browse Build / Project / Target / Task / Message nodes as a tree
 - Filter the tree by text
-- Inspect the selected node in a compact properties panel
 
 ## Usage
 
 1. Install the plugin in Rider.
 2. Open a `msbuild.binlog` file.
-3. Use the search box to narrow the tree.
-4. Select a node to inspect its properties.
-
-## Notes
-
-- The viewer is focused on a compact Rider-native experience rather than a full clone of Structured Log Viewer.
-- The exported build tree is based on `MSBuild.StructuredLogger`.
-
