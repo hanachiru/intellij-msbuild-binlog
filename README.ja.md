@@ -1,7 +1,6 @@
 # MSBuild Binlog Viewer for Rider
 
-[![Releases](https://img.shields.io/github/release/hanachiru/intellij-msbuild-binlog.svg)](https://github.com/hanachiru/
-intellij-msbuild-binlog/releases)
+[![Releases](https://img.shields.io/github/release/hanachiru/intellij-msbuild-binlog.svg)](https://github.com/hanachiru/intellij-msbuild-binlog/releases)
 [![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
 [![test](https://github.com/hanachiru/intellij-msbuild-binlog/actions/workflows/test.yml/badge.svg)](https://github.com/hanachiru/intellij-msbuild-binlog/actions/workflows/test.yml)
 
