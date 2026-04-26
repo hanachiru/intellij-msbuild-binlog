@@ -20,7 +20,7 @@ updates:
     open-pull-requests-limit: 5
 
   - package-ecosystem: nuget
-    directory: "/samples/HelloBinlog"
+    directory: "/samples/SampleBinlog"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
