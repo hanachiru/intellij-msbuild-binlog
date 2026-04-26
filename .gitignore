@@ -1,0 +1,11 @@
+.gradle/
+.idea/
+.intellijPlatform/
+.vscode/
+.DS_Store
+.vs/
+build/
+out/
+**/bin/
+**/obj/
+*.binlog

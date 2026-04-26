@@ -1,0 +1,22 @@
+<idea-plugin>
+    <id>io.github.hanachiru.intellij.msbuild.binlog</id>
+    <name>MSBuild Binlog Viewer</name>
+    <vendor email="hanachiru@users.noreply.github.com" url="https://github.com/hanachiru">hanachiru</vendor>
+
+    <description><![CDATA[
+    <p>Displays <code>.binlog</code> files in Rider using a dedicated GUI viewer.</p>
+    <p>The plugin parses MSBuild binary logs via a bundled .NET helper powered by MSBuild.StructuredLogger.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType
+                name="MSBuildBinlog"
+                fieldName="INSTANCE"
+                implementationClass="io.github.hanachiru.binlog.file.MsBuildBinlogFileType"
+                extensions="binlog"/>
+
+        <fileEditorProvider implementation="io.github.hanachiru.binlog.editor.BinlogFileEditorProvider"/>
+    </extensions>
+</idea-plugin>
