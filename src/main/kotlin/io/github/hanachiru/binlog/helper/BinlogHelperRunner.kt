@@ -6,19 +6,17 @@ import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.vfs.VirtualFile
 import io.github.hanachiru.binlog.editor.BinlogDocumentDto
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 
 class BinlogHelperRunner {
     private val objectMapper = jacksonObjectMapper()
+    private val helperExtractor = BundledHelperExtractor(javaClass)
 
     fun load(file: VirtualFile): BinlogDocumentDto {
-        val helperDll = ensureHelperExtracted()
+        val helperDll = helperExtractor.ensureExtracted(resolvePluginVersion())
 
         val commandLine = GeneralCommandLine(
             "dotnet",
@@ -63,49 +61,15 @@ class BinlogHelperRunner {
         }
     }
 
-    private fun ensureHelperExtracted(): Path {
-        val pluginVersion = PluginManagerCore
+    private fun resolvePluginVersion(): String {
+        return PluginManagerCore
             .getPlugin(PluginId.getId(PLUGIN_ID))
             ?.version
             ?: "dev"
-
-        val extractionRoot = Path.of(PathManager.getSystemPath(), "msbuild-binlog-viewer", pluginVersion)
-        val helperDll = extractionRoot.resolve(HELPER_DLL_NAME)
-
-        if (Files.exists(helperDll)) {
-            return helperDll
-        }
-
-        Files.createDirectories(extractionRoot)
-
-        val manifestStream = javaClass.getResourceAsStream("/$HELPER_RESOURCE_ROOT/manifest.txt")
-            ?: throw BinlogHelperException("The bundled helper manifest was not found in the plugin resources.")
-
-        manifestStream.bufferedReader().useLines { lines ->
-            lines.filter { it.isNotBlank() }.forEach { relativePath ->
-                val target = extractionRoot.resolve(relativePath)
-                target.parent?.let(Files::createDirectories)
-
-                val resourceStream = javaClass.getResourceAsStream("/$HELPER_RESOURCE_ROOT/$relativePath")
-                    ?: throw BinlogHelperException("The bundled helper resource $relativePath is missing.")
-
-                resourceStream.use { input ->
-                    Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING)
-                }
-            }
-        }
-
-        if (!Files.exists(helperDll)) {
-            throw BinlogHelperException("The bundled helper DLL was not extracted correctly.")
-        }
-
-        return helperDll
     }
 
     private companion object {
         const val PLUGIN_ID = "io.github.hanachiru.intellij.msbuild.binlog"
-        const val HELPER_DLL_NAME = "BinlogJsonExporter.dll"
-        const val HELPER_RESOURCE_ROOT = "binlog-helper"
     }
 }
 

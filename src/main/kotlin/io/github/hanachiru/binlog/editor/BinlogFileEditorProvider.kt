@@ -5,10 +5,11 @@ import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.WeighedFileEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import io.github.hanachiru.binlog.file.MsBuildBinlogFileType
 
 class BinlogFileEditorProvider : WeighedFileEditorProvider() {
     override fun accept(project: Project, file: VirtualFile): Boolean {
-        return file.extension.equals("binlog", ignoreCase = true)
+        return file.fileType == MsBuildBinlogFileType
     }
 
     override fun createEditor(project: Project, file: VirtualFile): FileEditor {
