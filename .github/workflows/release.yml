@@ -3,19 +3,15 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Release tag to create or update
+      version_bump:
+        description: Semantic version part to increment
         required: true
-        type: string
-      release_name:
-        description: Release title shown on GitHub
-        required: true
-        type: string
-      prerelease:
-        description: Mark the GitHub release as a prerelease
-        required: false
-        default: false
-        type: boolean
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 permissions:
   contents: write
@@ -27,6 +23,77 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: release_version
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_type }}" != "branch" ]]; then
+            echo "::error::Run this workflow from a branch so version updates can be pushed."
+            exit 1
+          fi
+
+          current_version="$(grep '^pluginVersion=' gradle.properties | cut -d'=' -f2)"
+
+          if [[ ! "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Current pluginVersion '$current_version' is not semantic versioning in major.minor.patch format."
+            exit 1
+          fi
+
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          patch="${BASH_REMATCH[3]}"
+
+          case "${{ inputs.version_bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+            *)
+              echo "::error::Unsupported version bump '${{ inputs.version_bump }}'."
+              exit 1
+              ;;
+          esac
+
+          version="$major.$minor.$patch"
+          tag="v$version"
+
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Update version files
+        shell: bash
+        run: |
+          version="${{ steps.release_version.outputs.value }}"
+
+          sed -i "s/^pluginVersion=.*/pluginVersion=$version/" gradle.properties
+          grep '^pluginVersion=' gradle.properties
+
+      - name: Commit version updates
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add gradle.properties
+
+          if git diff --cached --quiet; then
+            echo "No version changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Release ${{ steps.release_version.outputs.value }}"
+          git push origin "HEAD:${{ github.ref_name }}"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -46,11 +113,43 @@ jobs:
       - name: Build plugin distribution
         run: ./gradlew buildPlugin
 
+      - name: Validate Marketplace credentials
+        shell: bash
+        env:
+          INTELLIJ_PLATFORM_PUBLISHING_TOKEN: ${{ secrets.INTELLIJ_PLATFORM_PUBLISHING_TOKEN }}
+          INTELLIJ_PLATFORM_SIGNING_CERTIFICATE_CHAIN: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_CERTIFICATE_CHAIN }}
+          INTELLIJ_PLATFORM_SIGNING_PRIVATE_KEY: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_PRIVATE_KEY }}
+          INTELLIJ_PLATFORM_SIGNING_PASSWORD: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_PASSWORD }}
+        run: |
+          for secret_name in \
+            INTELLIJ_PLATFORM_PUBLISHING_TOKEN \
+            INTELLIJ_PLATFORM_SIGNING_CERTIFICATE_CHAIN \
+            INTELLIJ_PLATFORM_SIGNING_PRIVATE_KEY \
+            INTELLIJ_PLATFORM_SIGNING_PASSWORD; do
+            if [[ -z "${!secret_name}" ]]; then
+              echo "::error::$secret_name is not set."
+              exit 1
+            fi
+          done
+
+      - name: Publish plugin to JetBrains Marketplace
+        env:
+          ORG_GRADLE_PROJECT_intellijPlatformPublishingToken: ${{ secrets.INTELLIJ_PLATFORM_PUBLISHING_TOKEN }}
+          ORG_GRADLE_PROJECT_intellijPlatformSigningCertificateChain: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_CERTIFICATE_CHAIN }}
+          ORG_GRADLE_PROJECT_intellijPlatformSigningPrivateKey: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_intellijPlatformSigningPassword: ${{ secrets.INTELLIJ_PLATFORM_SIGNING_PASSWORD }}
+        run: ./gradlew publishPlugin
+
+      - name: Create or update release tag
+        shell: bash
+        run: |
+          git tag -f "${{ steps.release_version.outputs.tag }}"
+          git push origin "refs/tags/${{ steps.release_version.outputs.tag }}" --force
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: ${{ inputs.release_name }}
-          prerelease: ${{ inputs.prerelease }}
+          tag_name: ${{ steps.release_version.outputs.tag }}
+          name: ${{ steps.release_version.outputs.value }}
           generate_release_notes: true
           files: build/distributions/*.zip
