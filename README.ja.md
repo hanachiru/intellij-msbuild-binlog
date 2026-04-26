@@ -1,5 +1,10 @@
 # MSBuild Binlog Viewer for Rider
 
+[![Releases](https://img.shields.io/github/release/hanachiru/intellij-msbuild-binlog.svg)](https://github.com/hanachiru/
+intellij-msbuild-binlog/releases)
+[![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
+[![test](https://github.com/hanachiru/intellij-msbuild-binlog/actions/workflows/test.yml/badge.svg)](https://github.com/hanachiru/intellij-msbuild-binlog/actions/workflows/test.yml)
+
 [English README](README.md)
 
 MSBuild Binlog Viewer for Rider は、`msbuild.binlog` を Rider 内の専用エディタで開き、ツリー表示とプロパティ表示で確認できるプラグインです。
