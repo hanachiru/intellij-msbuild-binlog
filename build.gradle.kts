@@ -12,16 +12,19 @@ group = property("pluginGroup").toString()
 version = property("pluginVersion").toString()
 
 val platformVersion = providers.gradleProperty("platformVersion").get()
+val signingCertificateChainFilePath = providers.environmentVariable("CERTIFICATE_CHAIN_FILE")
+    .orElse(providers.gradleProperty("intellijPlatformSigningCertificateChainFile"))
 val signingCertificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
     .orElse(providers.gradleProperty("intellijPlatformSigningCertificateChain"))
+val signingPrivateKeyFilePath = providers.environmentVariable("PRIVATE_KEY_FILE")
+    .orElse(providers.gradleProperty("intellijPlatformSigningPrivateKeyFile"))
 val signingPrivateKey = providers.environmentVariable("PRIVATE_KEY")
     .orElse(providers.gradleProperty("intellijPlatformSigningPrivateKey"))
 val signingPassword = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
     .orElse(providers.gradleProperty("intellijPlatformSigningPassword"))
 val hasSigningSecrets = listOf(
-    signingCertificateChain.orNull,
-    signingPrivateKey.orNull,
-    signingPassword.orNull,
+    signingCertificateChainFilePath.orNull ?: signingCertificateChain.orNull,
+    signingPrivateKeyFilePath.orNull ?: signingPrivateKey.orNull,
 ).all { !it.isNullOrBlank() }
 val applicationsDir = file("${System.getProperty("user.home")}/Applications")
 val localRiderCandidates = applicationsDir.listFiles()
@@ -80,8 +83,10 @@ intellijPlatform {
 
     if (hasSigningSecrets) {
         signing {
-            certificateChain = signingCertificateChain
-            privateKey = signingPrivateKey
+            signingCertificateChainFilePath.orNull?.let { certificateChainFile.set(file(it)) }
+                ?: run { certificateChain = signingCertificateChain }
+            signingPrivateKeyFilePath.orNull?.let { privateKeyFile.set(file(it)) }
+                ?: run { privateKey = signingPrivateKey }
             password = signingPassword
         }
     }

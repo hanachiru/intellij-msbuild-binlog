@@ -136,11 +136,29 @@ jobs:
       - name: Build plugin distribution
         run: ./gradlew buildPlugin
 
-      - name: Sign and verify plugin distribution
-        if: ${{ inputs.manual_marketplace_upload }}
+      - name: Prepare signing files
+        shell: bash
         env:
           CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          certificate_chain_file="$RUNNER_TEMP/marketplace-certificate-chain.pem"
+          private_key_file="$RUNNER_TEMP/marketplace-private-key.pem"
+
+          umask 077
+          printf '%s\n' "$CERTIFICATE_CHAIN" > "$certificate_chain_file"
+          printf '%s\n' "$PRIVATE_KEY" > "$private_key_file"
+
+          {
+            echo "CERTIFICATE_CHAIN_FILE=$certificate_chain_file"
+            echo "PRIVATE_KEY_FILE=$private_key_file"
+          } >> "$GITHUB_ENV"
+
+      - name: Sign and verify plugin distribution
+        if: ${{ inputs.manual_marketplace_upload }}
+        env:
           PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
         run: ./gradlew signPlugin verifyPluginSignature
 
@@ -158,11 +176,14 @@ jobs:
       - name: Publish plugin to JetBrains Marketplace
         if: ${{ !inputs.manual_marketplace_upload }}
         env:
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
           JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
         run: ./gradlew publishPlugin
+
+      - name: Remove signing files
+        if: ${{ always() }}
+        shell: bash
+        run: rm -f "${CERTIFICATE_CHAIN_FILE:-}" "${PRIVATE_KEY_FILE:-}"
 
       - name: Commit and push release
         shell: bash
