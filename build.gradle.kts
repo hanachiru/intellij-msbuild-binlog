@@ -11,11 +11,24 @@ plugins {
 group = property("pluginGroup").toString()
 version = property("pluginVersion").toString()
 
-val localRiderCandidates = listOf(
-    file("${System.getProperty("user.home")}/Applications/Rider.app"),
-    file("${System.getProperty("user.home")}/Applications/Rider 2026.1 EAP2.app"),
-)
-val localRider = localRiderCandidates.firstOrNull { it.exists() }
+val platformVersion = providers.gradleProperty("platformVersion").get()
+val signingCertificateChain = providers.gradleProperty("intellijPlatformSigningCertificateChain")
+val signingPrivateKey = providers.gradleProperty("intellijPlatformSigningPrivateKey")
+val signingPassword = providers.gradleProperty("intellijPlatformSigningPassword")
+val hasSigningSecrets = listOf(
+    signingCertificateChain.orNull,
+    signingPrivateKey.orNull,
+    signingPassword.orNull,
+).all { !it.isNullOrBlank() }
+val applicationsDir = file("${System.getProperty("user.home")}/Applications")
+val localRiderCandidates = applicationsDir.listFiles()
+    ?.filter { it.isDirectory && it.name.startsWith("Rider") }
+    ?.sortedWith(
+        compareByDescending<File> { it.name.contains(platformVersion) }
+            .thenByDescending { it.name == "Rider.app" }
+    )
+    .orEmpty()
+val localRider = localRiderCandidates.firstOrNull()
 
 repositories {
     mavenCentral()
@@ -42,7 +55,7 @@ dependencies {
         if (localRider != null) {
             local(localRider.absolutePath)
         } else {
-            rider(providers.gradleProperty("platformVersion")) {
+            rider(platformVersion) {
                 useInstaller = false
             }
         }
@@ -62,14 +75,17 @@ intellijPlatform {
         }
     }
 
-    signing {
-        certificateChain = providers.gradleProperty("intellijPlatformSigningCertificateChain")
-        privateKey = providers.gradleProperty("intellijPlatformSigningPrivateKey")
-        password = providers.gradleProperty("intellijPlatformSigningPassword")
+    if (hasSigningSecrets) {
+        signing {
+            certificateChain = signingCertificateChain
+            privateKey = signingPrivateKey
+            password = signingPassword
+        }
     }
 
     publishing {
-        token = providers.gradleProperty("intellijPlatformPublishingToken")
+        token = providers.environmentVariable("JETBRAINS_TOKEN")
+        channels = listOf("default")
     }
 }
 
