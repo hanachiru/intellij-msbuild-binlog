@@ -28,7 +28,7 @@ internal static class BinlogExporter
     /// </summary>
     private static Dictionary<string, string> CreateSummary(Build build, SummaryCounter summaryCounter)
     {
-        return new Dictionary<string, string>(8, StringComparer.Ordinal)
+        return new Dictionary<string, string>(10, StringComparer.Ordinal)
         {
             ["Outcome"] = build.Succeeded ? "Succeeded" : "Failed",
             ["Duration"] = NullIfEmpty(build.DurationText) ?? "0",
