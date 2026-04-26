@@ -4,6 +4,8 @@
 
 MSBuild Binlog Viewer for Rider opens `msbuild.binlog` files in a dedicated viewer inside Rider.
 
+![Screenshot of MSBuild Binlog Viewer for Rider](docs/Sample.png)
+
 ## Features
 
 - Open `.binlog` files in a dedicated editor

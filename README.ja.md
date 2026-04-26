@@ -4,6 +4,8 @@
 
 MSBuild Binlog Viewer for Rider は、`msbuild.binlog` を Rider 内で可視化することができるプラグインです。
 
+![MSBuild Binlog Viewer for Rider のスクリーンショット](docs/Sample.png)
+
 ## できること
 
 - `.binlog` を専用エディタで開く
