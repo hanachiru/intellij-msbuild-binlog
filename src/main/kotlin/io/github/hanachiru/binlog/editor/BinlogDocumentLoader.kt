@@ -20,8 +20,8 @@ internal class BinlogDocumentLoader(
 
         val application = ApplicationManager.getApplication()
         application.executeOnPooledThread {
-            val nextState = runCatching { helperRunner.load(file) }
-                .fold<BinlogEditorState>(
+            val nextState: BinlogEditorState = runCatching { helperRunner.load(file) }
+                .fold(
                     onSuccess = { document -> BinlogEditorState.Loaded(document) },
                     onFailure = { error -> BinlogEditorState.Failed(file.name, error) },
                 )
