@@ -1,0 +1,187 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: Semantic version part to increment
+        required: true
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      manual_marketplace_upload:
+        description: Skip JetBrains Marketplace publish and upload plugin artifacts for manual upload
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Resolve release version
+        id: release_version
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_type }}" != "branch" ]]; then
+            echo "::error::Run this workflow from a branch so version updates can be pushed."
+            exit 1
+          fi
+
+          current_version="$(grep '^pluginVersion=' gradle.properties | cut -d'=' -f2)"
+
+          if [[ ! "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Current pluginVersion '$current_version' is not semantic versioning in major.minor.patch format."
+            exit 1
+          fi
+
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          patch="${BASH_REMATCH[3]}"
+
+          case "${{ inputs.version_bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+            *)
+              echo "::error::Unsupported version bump '${{ inputs.version_bump }}'."
+              exit 1
+              ;;
+          esac
+
+          version="$major.$minor.$patch"
+          tag="v$version"
+
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Update version files
+        shell: bash
+        run: |
+          version="${{ steps.release_version.outputs.value }}"
+
+          sed -i "s/^pluginVersion=.*/pluginVersion=$version/" gradle.properties
+          grep '^pluginVersion=' gradle.properties
+
+      - name: Ensure release tag is new
+        shell: bash
+        run: |
+          tag="${{ steps.release_version.outputs.tag }}"
+
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists locally."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists on origin."
+            exit 1
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build plugin distribution
+        run: ./gradlew buildPlugin
+
+      - name: Sign and verify plugin distribution
+        if: ${{ inputs.manual_marketplace_upload }}
+        env:
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew signPlugin verifyPluginSignature
+
+      - name: Upload plugin artifacts for manual Marketplace upload
+        if: ${{ inputs.manual_marketplace_upload }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-artifacts-${{ steps.release_version.outputs.value }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            build/distributions/*.zip
+            build/libs/*.jar
+
+      - name: Publish plugin to JetBrains Marketplace
+        if: ${{ !inputs.manual_marketplace_upload }}
+        env:
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+          JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+        run: ./gradlew publishPlugin
+
+      - name: Commit and push release
+        shell: bash
+        run: |
+          git config user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+
+          git add gradle.properties
+          git commit -m "Release ${{ steps.release_version.outputs.value }}"
+          git tag "${{ steps.release_version.outputs.tag }}"
+          git push origin "HEAD:${{ github.ref_name }}" "refs/tags/${{ steps.release_version.outputs.tag }}"
+
+      - name: Publish GitHub release
+        id: draft_release
+        uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter.yml
+          token: ${{ steps.app-token.outputs.token }}
+          version: ${{ steps.release_version.outputs.value }}
+          tag: ${{ steps.release_version.outputs.tag }}
+          name: ${{ steps.release_version.outputs.value }}
+          publish: true
