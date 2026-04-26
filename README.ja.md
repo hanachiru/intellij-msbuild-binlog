@@ -12,7 +12,6 @@ MSBuild Binlog Viewer for Rider は、`msbuild.binlog` を Rider 内の専用エ
 
 ## 機能
 
-- `.binlog` を専用エディタで開く
 - Build / Project / Target / Task / Message などをツリー表示する
 - ツリーをテキストで絞り込む
 
