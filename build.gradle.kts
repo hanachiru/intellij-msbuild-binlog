@@ -149,6 +149,10 @@ tasks.named("buildSearchableOptions") {
     enabled = false
 }
 
+tasks.named("verifyPluginSignature") {
+    dependsOn(tasks.named("signPlugin"))
+}
+
 tasks.clean {
     delete(helperPublishDir, helperResourcesDir)
 }
