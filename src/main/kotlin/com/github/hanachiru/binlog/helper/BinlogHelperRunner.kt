@@ -69,7 +69,7 @@ class BinlogHelperRunner {
     }
 
     private companion object {
-        const val PLUGIN_ID = "com.github.hanachiru.intellij.msbuild.binlog"
+        const val PLUGIN_ID = "com.github.hanachiru.msbuild.binlog"
     }
 }
 
