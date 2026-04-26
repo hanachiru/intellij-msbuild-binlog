@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 data class BinlogDocumentDto(
     val filePath: String,

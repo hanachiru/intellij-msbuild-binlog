@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 import com.intellij.ide.structureView.StructureViewBuilder
 import com.intellij.codeHighlighting.BackgroundEditorHighlighter

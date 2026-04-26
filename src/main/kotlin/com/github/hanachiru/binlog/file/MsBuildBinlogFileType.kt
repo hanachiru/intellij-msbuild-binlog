@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.file
+package com.github.hanachiru.binlog.file
 
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.vfs.VirtualFile

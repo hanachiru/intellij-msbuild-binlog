@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>io.github.hanachiru.intellij.msbuild.binlog</id>
+    <id>com.github.hanachiru.intellij.msbuild.binlog</id>
     <name>MSBuild Binlog Viewer</name>
     <vendor email="hanachiru@users.noreply.github.com" url="https://github.com/hanachiru">hanachiru</vendor>
 
@@ -25,9 +25,9 @@
         <fileType
                 name="MSBuildBinlog"
                 fieldName="INSTANCE"
-                implementationClass="io.github.hanachiru.binlog.file.MsBuildBinlogFileType"
+                implementationClass="com.github.hanachiru.binlog.file.MsBuildBinlogFileType"
                 extensions="binlog"/>
 
-        <fileEditorProvider implementation="io.github.hanachiru.binlog.editor.BinlogFileEditorProvider"/>
+        <fileEditorProvider implementation="com.github.hanachiru.binlog.editor.BinlogFileEditorProvider"/>
     </extensions>
 </idea-plugin>

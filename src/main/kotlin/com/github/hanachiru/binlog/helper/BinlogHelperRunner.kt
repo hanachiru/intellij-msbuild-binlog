@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.helper
+package com.github.hanachiru.binlog.helper
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -8,7 +8,7 @@ import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.vfs.VirtualFile
-import io.github.hanachiru.binlog.editor.BinlogDocumentDto
+import com.github.hanachiru.binlog.editor.BinlogDocumentDto
 import java.nio.file.Path
 
 class BinlogHelperRunner {
@@ -69,7 +69,7 @@ class BinlogHelperRunner {
     }
 
     private companion object {
-        const val PLUGIN_ID = "io.github.hanachiru.intellij.msbuild.binlog"
+        const val PLUGIN_ID = "com.github.hanachiru.intellij.msbuild.binlog"
     }
 }
 

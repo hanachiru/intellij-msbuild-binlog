@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.JBColor

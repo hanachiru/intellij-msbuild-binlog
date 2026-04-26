@@ -1,8 +1,8 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.vfs.VirtualFile
-import io.github.hanachiru.binlog.helper.BinlogHelperRunner
+import com.github.hanachiru.binlog.helper.BinlogHelperRunner
 
 internal class BinlogDocumentLoader(
     private val file: VirtualFile,

@@ -1,11 +1,11 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.WeighedFileEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import io.github.hanachiru.binlog.file.MsBuildBinlogFileType
+import com.github.hanachiru.binlog.file.MsBuildBinlogFileType
 
 class BinlogFileEditorProvider : WeighedFileEditorProvider() {
     override fun accept(project: Project, file: VirtualFile): Boolean {

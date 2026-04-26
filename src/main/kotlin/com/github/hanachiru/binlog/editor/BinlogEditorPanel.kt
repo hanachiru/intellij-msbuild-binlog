@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.VirtualFile
@@ -8,7 +8,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
-import io.github.hanachiru.binlog.helper.BinlogHelperRunner
+import com.github.hanachiru.binlog.helper.BinlogHelperRunner
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Font

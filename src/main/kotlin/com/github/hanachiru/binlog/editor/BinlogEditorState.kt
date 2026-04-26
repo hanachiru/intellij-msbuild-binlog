@@ -1,4 +1,4 @@
-package io.github.hanachiru.binlog.editor
+package com.github.hanachiru.binlog.editor
 
 internal sealed interface BinlogEditorState {
     data class Loading(val fileName: String) : BinlogEditorState
