@@ -133,8 +133,39 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      - name: Validate Marketplace secrets
+        shell: bash
+        env:
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+          JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+        run: |
+          missing=()
+
+          [[ -n "$CERTIFICATE_CHAIN" ]] || missing+=("CERTIFICATE_CHAIN")
+          [[ -n "$PRIVATE_KEY" ]] || missing+=("PRIVATE_KEY")
+          [[ -n "$PRIVATE_KEY_PASSWORD" ]] || missing+=("PRIVATE_KEY_PASSWORD")
+
+          if [[ "${{ inputs.manual_marketplace_upload }}" != "true" ]] && [[ -z "$JETBRAINS_TOKEN" ]]; then
+            missing+=("JETBRAINS_TOKEN")
+          fi
+
+          if ((${#missing[@]} > 0)); then
+            printf '::error::Missing required secrets: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
       - name: Build plugin distribution
         run: ./gradlew buildPlugin
+
+      - name: Sign and verify plugin distribution
+        if: ${{ inputs.manual_marketplace_upload }}
+        env:
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew signPlugin verifyPluginSignature
 
       - name: Upload plugin artifacts for manual Marketplace upload
         if: ${{ inputs.manual_marketplace_upload }}
@@ -150,6 +181,9 @@ jobs:
       - name: Publish plugin to JetBrains Marketplace
         if: ${{ !inputs.manual_marketplace_upload }}
         env:
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
           JETBRAINS_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
         run: ./gradlew publishPlugin
 

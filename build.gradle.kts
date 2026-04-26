@@ -12,9 +12,12 @@ group = property("pluginGroup").toString()
 version = property("pluginVersion").toString()
 
 val platformVersion = providers.gradleProperty("platformVersion").get()
-val signingCertificateChain = providers.gradleProperty("intellijPlatformSigningCertificateChain")
-val signingPrivateKey = providers.gradleProperty("intellijPlatformSigningPrivateKey")
-val signingPassword = providers.gradleProperty("intellijPlatformSigningPassword")
+val signingCertificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
+    .orElse(providers.gradleProperty("intellijPlatformSigningCertificateChain"))
+val signingPrivateKey = providers.environmentVariable("PRIVATE_KEY")
+    .orElse(providers.gradleProperty("intellijPlatformSigningPrivateKey"))
+val signingPassword = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
+    .orElse(providers.gradleProperty("intellijPlatformSigningPassword"))
 val hasSigningSecrets = listOf(
     signingCertificateChain.orNull,
     signingPrivateKey.orNull,
