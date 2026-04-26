@@ -4,9 +4,19 @@
     <vendor email="hanachiru@users.noreply.github.com" url="https://github.com/hanachiru">hanachiru</vendor>
 
     <description><![CDATA[
-    <p>Displays <code>.binlog</code> files in Rider using a dedicated GUI viewer.</p>
-    <p>The plugin parses MSBuild binary logs via a bundled .NET helper powered by MSBuild.StructuredLogger.</p>
+        <p>Open <code>.binlog</code> files in Rider using a dedicated viewer designed for fast inspection.</p>
+        <ul>
+            <li>Browse Build / Project / Target / Task / Message nodes as a tree</li>
+            <li>Filter the tree by text</li>
+            <li>Inspect the selected node in a compact properties panel</li>
+        </ul>
+        <p>The plugin parses MSBuild binary logs via a bundled .NET helper powered by MSBuild.StructuredLogger.</p>
+        <p>A local <code>dotnet</code> runtime or SDK is required.</p>
     ]]></description>
+
+        <change-notes><![CDATA[
+        <p>Initial public release of the Rider-native MSBuild binlog viewer.</p>
+        ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.rider</depends>
