@@ -61,6 +61,16 @@ intellijPlatform {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
         }
     }
+
+    signing {
+        certificateChain = providers.gradleProperty("intellijPlatformSigningCertificateChain")
+        privateKey = providers.gradleProperty("intellijPlatformSigningPrivateKey")
+        password = providers.gradleProperty("intellijPlatformSigningPassword")
+    }
+
+    publishing {
+        token = providers.gradleProperty("intellijPlatformPublishingToken")
+    }
 }
 
 val publishBinlogHelper by tasks.registering(Exec::class) {
