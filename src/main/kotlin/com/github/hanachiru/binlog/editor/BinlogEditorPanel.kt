@@ -152,11 +152,11 @@ class BinlogEditorPanel(
             add(detailsScrollPane, BorderLayout.CENTER)
         }
 
-        return JSplitPane(JSplitPane.HORIZONTAL_SPLIT).apply {
-            resizeWeight = 0.56
+        return JSplitPane(JSplitPane.VERTICAL_SPLIT).apply {
+            resizeWeight = 0.64
             border = JBUI.Borders.empty(10)
-            leftComponent = treePanel
-            rightComponent = inspectorPanel
+            topComponent = treePanel
+            bottomComponent = inspectorPanel
             minimumSize = Dimension(JBUI.scale(640), JBUI.scale(360))
         }
     }
